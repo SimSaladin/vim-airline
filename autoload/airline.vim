@@ -137,7 +137,7 @@ function! airline#update_statusline()
 
   " Now create the active statusline
   let w:airline_active = 1
-  let context = { 'winnr': winnr(), 'active': 1, 'bufnr': winbufnr(winnr()) }
+  let context = { 'winnr': win_getid(), 'active': 1, 'bufnr': winbufnr(winnr()) }
   call s:invoke_funcrefs(context, g:airline_statusline_funcrefs)
 endfunction
 
@@ -162,7 +162,7 @@ function! airline#update_statusline_inactive(range)
       continue
     endif
     call setwinvar(nr, 'airline_active', 0)
-    let context = { 'winnr': nr, 'active': 0, 'bufnr': winbufnr(nr) }
+    let context = { 'winnr': win_getid(nr), 'active': 0, 'bufnr': winbufnr(nr) }
     if get(g:, 'airline_inactive_alt_sep', 0)
       call extend(context, {
             \ 'left_sep': g:airline_left_alt_sep,
