@@ -11,6 +11,7 @@ function! airline#extensions#tabline#autoshow#off()
   if exists('s:original_tabline')
     let &tabline = s:original_tabline
     let &showtabline = s:original_showtabline
+    unlet s:original_tabline
   endif
 
   augroup airline_tabline_autoshow
@@ -19,7 +20,9 @@ function! airline#extensions#tabline#autoshow#off()
 endfunction
 
 function! airline#extensions#tabline#autoshow#on()
-  let [ s:original_tabline, s:original_showtabline ] = [ &tabline, &showtabline ]
+  if !exists('s:original_tabline')
+    let [ s:original_tabline, s:original_showtabline ] = [ &tabline, &showtabline ]
+  endif
 
   augroup airline_tabline_autoshow
     autocmd!

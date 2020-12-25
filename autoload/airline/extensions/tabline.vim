@@ -3,14 +3,6 @@
 
 scriptencoding utf-8
 
-if exists('g:loaded_vim_airline_tabline')
-  finish
-endif
-
-let g:loaded_vim_airline_tabline = 1
-
-let s:enabled = 0
-
 let s:taboo = get(g:, 'airline#extensions#taboo#enabled', 1) && get(g:, 'loaded_taboo', 0)
 if s:taboo
   let g:taboo_tabline = 0
@@ -18,6 +10,7 @@ endif
 
 let s:ctrlspace = get(g:, 'CtrlSpaceLoaded', 0)
 let s:tabws = get(g:, 'tabws_loaded', 0)
+let s:enabled = get(g:, 'airline#extensions#tabline#enabled', 1)
 
 function! airline#extensions#tabline#init(ext)
   if has('gui_running')
@@ -26,18 +19,27 @@ function! airline#extensions#tabline#init(ext)
 
   augroup airline_tabline
     autocmd!
+    autocmd BufAdd * call <sid>update_tabline(0)
+    autocmd SessionLoadPost * call <sid>update_tabline(1)
     autocmd User AirlineToggledOn call s:toggle_on()
     autocmd User AirlineToggledOff call s:toggle_off()
   augroup END
 
-  call s:toggle_on()
+  if s:enabled
+    call s:toggle_on()
+  endif
   call a:ext.add_theme_func('airline#extensions#tabline#load_theme')
 endfunction
 
-function! s:toggle_off()
-  if !s:enabled
-    return
+function! airline#extensions#tabline#toggle()
+  if s:enabled
+    call s:toggle_off()
+  else
+    call s:toggle_on()
   endif
+endfunction
+
+function! s:toggle_off()
   let s:enabled = 0
   call airline#extensions#tabline#autoshow#off()
   call airline#extensions#tabline#tabs#off()
@@ -51,15 +53,14 @@ function! s:toggle_off()
 endfunction
 
 function! s:toggle_on()
-  if s:enabled
-    return
-  endif
   let s:enabled = 1
+
   if get(g:, 'airline_statusline_ontop', 0)
     call airline#extensions#tabline#enable()
     let &tabline='%!airline#statusline('.winnr().')'
     return
   endif
+
   call airline#extensions#tabline#autoshow#on()
   call airline#extensions#tabline#tabs#on()
   call airline#extensions#tabline#buffers#on()
@@ -69,12 +70,11 @@ function! s:toggle_on()
   if s:tabws
     call airline#extensions#tabline#tabws#on()
   endif
-
   set tabline=%!airline#extensions#tabline#get()
 endfunction
 
 function! s:update_tabline(forceit)
-  if get(g:, 'airline#extensions#tabline#disable_refresh', 0)
+  if !s:enabled || get(g:, 'airline#extensions#tabline#disable_refresh', 0)
     return
   endif
   " loading a session file
@@ -84,8 +84,6 @@ function! s:update_tabline(forceit)
   endif
   let match = expand('<afile>')
   if pumvisible()
-    return
-  elseif !get(g:, 'airline#extensions#tabline#enabled', 0)
     return
   " return, if buffer matches ignore pattern or is directory (netrw)
   elseif empty(match) || airline#util#ignore_buf(match) || isdirectory(match)
@@ -166,6 +164,9 @@ endfunction
 let s:current_tabcnt = -1
 
 function! airline#extensions#tabline#get()
+  if !s:enabled
+    return
+  endif
   let show_buffers = get(g:, 'airline#extensions#tabline#show_buffers', 1)
   let show_tabs = get(g:, 'airline#extensions#tabline#show_tabs', 1)
 
@@ -178,12 +179,6 @@ function! airline#extensions#tabline#get()
     call airline#extensions#tabline#tabws#invalidate()
   endif
 
-  if !exists('#airline#BufAdd#*')
-    autocmd airline BufAdd * call <sid>update_tabline(0)
-  endif
-  if !exists('#airline#SessionLoadPost')
-    autocmd airline SessionLoadPost * call <sid>update_tabline(1)
-  endif
   if s:ctrlspace
     return airline#extensions#tabline#ctrlspace#get()
   elseif s:tabws
