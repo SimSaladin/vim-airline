@@ -48,7 +48,7 @@ function! s:init()
   call airline#util#doautocmd('AirlineAfterInit')
 endfunction
 
-let s:active_winnr = -1
+let s:active_winid = -1
 function! s:on_window_changed(event)
   " don't trigger for Vim popup windows
   if &buftype is# 'popup'
@@ -59,12 +59,12 @@ function! s:on_window_changed(event)
     " do not trigger for previewwindows
     return
   endif
-  let s:active_winnr = winnr()
+  let s:active_winid = win_getid()
   " Handle each window only once, since we might come here several times for
   " different autocommands.
-  let l:key = [bufnr('%'), s:active_winnr, winnr('$'), tabpagenr(), &ft]
+  let l:key = [bufnr('%'), s:active_winid, tabpagenr(), &ft]
   if get(g:, 'airline_last_window_changed', []) == l:key
-        \ && &stl is# '%!airline#statusline('.s:active_winnr.')'
+        \ && &stl is# '%!airline#statusline('.s:active_winid.')'
         \ && &ft !~? 'gitcommit'
     " fugitive is special, it changes names and filetypes several times,
     " make sure the caching does not get into its way
@@ -82,7 +82,7 @@ function! s:on_focus_gained()
 endfunction
 
 function! s:on_cursor_moved()
-  if winnr() != s:active_winnr || !exists('w:airline_active')
+  if win_getid() != s:active_winid || !exists('w:airline_active')
     call s:on_window_changed('CursorMoved')
   endif
   call airline#update_tabline()
