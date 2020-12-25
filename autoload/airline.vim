@@ -180,8 +180,12 @@ function! s:invoke_funcrefs(context, funcrefs)
   if err == 1
     let a:context.line = builder.build()
     let s:contexts[a:context.winnr] = a:context
-    let option = get(g:, 'airline_statusline_ontop', 0) ? '&tabline' : '&statusline'
-    call setwinvar(a:context.winnr, option, '%!airline#statusline('.a:context.winnr.')')
+    let val = '%!airline#statusline('.a:context.winnr.')'
+    if get(g:, 'airline_statusline_ontop', 0)
+      let &tabline = val
+    else
+      call win_execute(a:context.winnr, 'setlocal statusline='.val)
+    endif
   endif
 endfunction
 

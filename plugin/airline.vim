@@ -64,7 +64,7 @@ function! s:on_window_changed(event)
   " different autocommands.
   let l:key = [bufnr('%'), s:active_winid, tabpagenr(), &ft]
   if get(g:, 'airline_last_window_changed', []) == l:key
-        \ && &stl is# '%!airline#statusline('.s:active_winid.')'
+        \ && &l:stl is# '%!airline#statusline('.s:active_winid.')'
         \ && &ft !~? 'gitcommit'
     " fugitive is special, it changes names and filetypes several times,
     " make sure the caching does not get into its way
@@ -111,8 +111,8 @@ function! s:airline_toggle()
     augroup END
     let s:enabled = 0
 
-    if exists("s:stl")
-      let &stl = s:stl
+    if &l:statusline =~# '^%!airline#statusline(\d*)$'
+      setlocal statusline<
     endif
     if exists("s:tal")
       let [&tal, &showtabline] = s:tal
@@ -121,7 +121,6 @@ function! s:airline_toggle()
 
     call airline#util#doautocmd('AirlineToggledOff')
   else
-    let s:stl = &statusline
     let s:tal = [&tabline, &showtabline]
     augroup airline
       autocmd!
