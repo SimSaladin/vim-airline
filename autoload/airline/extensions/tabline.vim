@@ -3,6 +3,14 @@
 
 scriptencoding utf-8
 
+if exists('g:loaded_vim_airline_tabline')
+  finish
+endif
+
+let g:loaded_vim_airline_tabline = 1
+
+let s:enabled = 0
+
 let s:taboo = get(g:, 'airline#extensions#taboo#enabled', 1) && get(g:, 'loaded_taboo', 0)
 if s:taboo
   let g:taboo_tabline = 0
@@ -16,14 +24,21 @@ function! airline#extensions#tabline#init(ext)
     set guioptions-=e
   endif
 
-  autocmd User AirlineToggledOn call s:toggle_on()
-  autocmd User AirlineToggledOff call s:toggle_off()
+  augroup airline_tabline
+    autocmd!
+    autocmd User AirlineToggledOn call s:toggle_on()
+    autocmd User AirlineToggledOff call s:toggle_off()
+  augroup END
 
   call s:toggle_on()
   call a:ext.add_theme_func('airline#extensions#tabline#load_theme')
 endfunction
 
 function! s:toggle_off()
+  if !s:enabled
+    return
+  endif
+  let s:enabled = 0
   call airline#extensions#tabline#autoshow#off()
   call airline#extensions#tabline#tabs#off()
   call airline#extensions#tabline#buffers#off()
@@ -36,6 +51,10 @@ function! s:toggle_off()
 endfunction
 
 function! s:toggle_on()
+  if s:enabled
+    return
+  endif
+  let s:enabled = 1
   if get(g:, 'airline_statusline_ontop', 0)
     call airline#extensions#tabline#enable()
     let &tabline='%!airline#statusline('.winnr().')'

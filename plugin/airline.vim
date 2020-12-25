@@ -12,6 +12,7 @@ endif
 let g:loaded_airline = 1
 
 let s:airline_initialized = 0
+let s:enabled = 0
 function! s:init()
   if s:airline_initialized
     return
@@ -104,11 +105,11 @@ function! airline#cmdwinenter(...)
 endfunction
 
 function! s:airline_toggle()
-  if exists("#airline")
+  if s:enabled
     augroup airline
       au!
     augroup END
-    augroup! airline
+    let s:enabled = 0
 
     if exists("s:stl")
       let &stl = s:stl
@@ -173,6 +174,7 @@ function! s:airline_toggle()
         autocmd InsertEnter,InsertLeave,CursorMovedI * :call airline#update_tabline()
       endif
     augroup END
+    let s:enabled = 1
 
     if !airline#util#stl_disabled(winnr())
       if &laststatus < 2
@@ -212,8 +214,7 @@ endfunction
 function! s:airline_refresh(...)
   " a:1, fast refresh, do not reload the theme
   let fast=!empty(get(a:000, 0, 0))
-  if !exists("#airline")
-    " disabled
+  if !s:enabled
     return
   endif
   call airline#util#doautocmd('AirlineBeforeRefresh')
@@ -226,7 +227,7 @@ function! s:airline_refresh(...)
 endfunction
 
 function! s:FocusGainedHandler(timer)
-  if exists("s:timer") && a:timer == s:timer
+  if exists("s:timer") && a:timer == s:timer && s:enabled
     augroup airline
       au FocusGained * call s:on_focus_gained()
     augroup END
